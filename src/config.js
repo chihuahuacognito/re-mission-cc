@@ -1,5 +1,5 @@
-export const GAME_WIDTH = 960;
-export const GAME_HEIGHT = 540;
+export const GAME_WIDTH = 720;
+export const GAME_HEIGHT = 720;
 
 // Phaser-free on purpose: this stays unit-testable in Node without loading
 // the engine. main.js merges in the Phaser-specific fields (type, scale).

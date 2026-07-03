@@ -7,19 +7,21 @@ import { FeedbackSystem } from '../systems/FeedbackSystem.js';
 import { GameFlow } from '../systems/GameFlow.js';
 import { resolveInteraction } from '../systems/resolveInteraction.js';
 import { level01 } from '../data/level01.js';
+import { applyCircularChrome } from '../systems/CircularDisplay.js';
 
 export class GameScene extends Phaser.Scene {
   constructor() { super('Game'); }
 
   create() {
     this.input.setDefaultCursor('none');
+    applyCircularChrome(this);
     this.controller = new InputController(new MousePointerAdapter(this.input));
     this.dwell = new DwellTracker({ dwellMs: 800 });
     this.reticle = new Reticle(this);
     this.fx = new FeedbackSystem(this);
     this.flow = new GameFlow(level01);
 
-    this.label = this.add.text(480, 40, '', {
+    this.label = this.add.text(360, 80, '', {
       fontFamily: 'sans-serif', fontSize: '18px', color: '#cfefff', align: 'center',
     }).setOrigin(0.5).setDepth(500);
 
@@ -83,9 +85,9 @@ export class GameScene extends Phaser.Scene {
   _runChemoAlly(config) {
     // A friendly pulse the player aims: a moving beam of light toward the cluster.
     this._spawnCells(config.cluster);
-    const pulse = this.add.image(-40, 270, 'healthy').setDisplaySize(60, 60).setAlpha(0.9);
+    const pulse = this.add.image(90, 360, 'healthy').setDisplaySize(60, 60).setAlpha(0.9);
     this.tweens.add({
-      targets: pulse, x: 500, duration: 1200, ease: 'Sine.out',
+      targets: pulse, x: 380, duration: 1200, ease: 'Sine.out',
       onComplete: () => pulse.destroy(),
     });
     this.fx.tone('heal');

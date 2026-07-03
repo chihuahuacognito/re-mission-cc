@@ -3,8 +3,8 @@ import { createGameConfig, GAME_WIDTH, GAME_HEIGHT } from '../src/config.js';
 
 describe('createGameConfig', () => {
   it('uses the fixed slice resolution', () => {
-    expect(GAME_WIDTH).toBe(960);
-    expect(GAME_HEIGHT).toBe(540);
+    expect(GAME_WIDTH).toBe(720);
+    expect(GAME_HEIGHT).toBe(720);
   });
 
   it('builds a config carrying the provided scene list', () => {

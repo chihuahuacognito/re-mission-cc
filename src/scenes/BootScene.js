@@ -8,6 +8,19 @@ export class BootScene extends Phaser.Scene {
     this._makeDot('cell', 0xff5c7a);
     this._makeDot('boss', 0xff2e63);
     this._makeDot('healthy', 0x64ffb0);
+
+    if (!this.textures.exists('bgGlow')) {
+      const bg = this.textures.createCanvas('bgGlow', 720, 720);
+      const ctx = bg.getContext();
+      const grad = ctx.createRadialGradient(360, 360, 20, 360, 360, 360);
+      grad.addColorStop(0, '#1f5a6b');
+      grad.addColorStop(0.55, '#0e2f3b');
+      grad.addColorStop(1, '#06171e');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 720, 720);
+      bg.refresh();
+    }
+
     this.scene.start('Onboarding');
   }
 

@@ -5,6 +5,7 @@ import { DwellTracker } from '../input/DwellTracker.js';
 import { Reticle } from '../systems/Reticle.js';
 import { FeedbackSystem } from '../systems/FeedbackSystem.js';
 import { level01 } from '../data/level01.js';
+import { applyCircularChrome } from '../systems/CircularDisplay.js';
 
 export class OnboardingScene extends Phaser.Scene {
   constructor() { super('Onboarding'); }
@@ -13,20 +14,21 @@ export class OnboardingScene extends Phaser.Scene {
     const beat = level01.find((b) => b.type === 'onboarding');
     this.input.setDefaultCursor('none');
     this.input.mouse.disableContextMenu();
+    applyCircularChrome(this);
 
     this.controller = new InputController(new MousePointerAdapter(this.input));
     this.dwell = new DwellTracker({ dwellMs: 700 });
     this.reticle = new Reticle(this);
     this.fx = new FeedbackSystem(this);
 
-    this.add.text(480, 90, beat.config.text, {
+    this.add.text(360, 80, beat.config.text, {
       fontFamily: 'sans-serif', fontSize: '22px', color: '#cfefff', align: 'center',
     }).setOrigin(0.5);
 
     const t = beat.config.practiceTarget;
     this.target = this.add.image(t.x, t.y, 'healthy').setDisplaySize(t.radius * 2, t.radius * 2);
     this._t = t;
-    this.hint = this.add.text(480, 400,
+    this.hint = this.add.text(360, 620,
       'Move onto the light. Hold still to dwell, or click.', {
         fontFamily: 'sans-serif', fontSize: '16px', color: '#8fb3c9',
       }).setOrigin(0.5);

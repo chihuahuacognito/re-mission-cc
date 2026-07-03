@@ -5,6 +5,7 @@ import { InputController } from '../input/InputController.js';
 import { MousePointerAdapter } from '../input/MousePointerAdapter.js';
 import { DwellTracker } from '../input/DwellTracker.js';
 import { Reticle } from '../systems/Reticle.js';
+import { applyCircularChrome } from '../systems/CircularDisplay.js';
 
 export class ResultScene extends Phaser.Scene {
   constructor() { super('Result'); }
@@ -12,6 +13,7 @@ export class ResultScene extends Phaser.Scene {
 
   create() {
     this.input.setDefaultCursor('none');
+    applyCircularChrome(this);
     const fx = new FeedbackSystem(this);
 
     this.controller = new InputController(new MousePointerAdapter(this.input));
@@ -19,15 +21,15 @@ export class ResultScene extends Phaser.Scene {
     this.reticle = new Reticle(this);
 
     // "Bloom": expanding healthy light.
-    const bloom = this.add.image(480, 250, 'healthy').setDisplaySize(20, 20).setAlpha(0.9);
+    const bloom = this.add.image(360, 360, 'healthy').setDisplaySize(20, 20).setAlpha(0.9).setDepth(0);
     this.tweens.add({ targets: bloom, displayWidth: 1200, displayHeight: 1200, alpha: 0.15, duration: 1400, ease: 'Sine.out' });
     fx.tone('win');
 
-    this.add.text(480, 120, this._text, {
+    this.add.text(360, 150, this._text, {
       fontFamily: 'sans-serif', fontSize: '26px', color: '#eafff5', align: 'center',
     }).setOrigin(0.5).setDepth(10);
 
-    this.add.text(480, 300, 'How in control do you feel right now?', {
+    this.add.text(360, 410, 'How in control do you feel right now?', {
       fontFamily: 'sans-serif', fontSize: '18px', color: '#cfefff',
     }).setOrigin(0.5).setDepth(10);
 
@@ -38,8 +40,8 @@ export class ResultScene extends Phaser.Scene {
     // OnboardingScene's practice target.
     this._buttons = [];
     for (let n = 1; n <= 5; n++) {
-      const bx = 480 + (n - 3) * 70;
-      const by = 360;
+      const bx = 360 + (n - 3) * 64;
+      const by = 480;
       const obj = this.add.text(bx, by, String(n), {
         fontFamily: 'sans-serif', fontSize: '30px', color: '#7fe7ff',
         backgroundColor: '#12203a', padding: { x: 14, y: 8 },
@@ -94,7 +96,7 @@ export class ResultScene extends Phaser.Scene {
 
   _thanks() {
     this._buttons.forEach((b) => b.obj.setAlpha(0.4));
-    this.add.text(480, 440, 'Thank you. Dwell or tap to play again.', {
+    this.add.text(360, 570, 'Thank you. Dwell or tap to play again.', {
       fontFamily: 'sans-serif', fontSize: '18px', color: '#8fb3c9',
     }).setOrigin(0.5).setDepth(10);
   }

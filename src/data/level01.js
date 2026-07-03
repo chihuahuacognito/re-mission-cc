@@ -1,36 +1,37 @@
-// The vertical slice as data. Coordinates assume a 960x540 field.
+// The vertical slice as data. Coordinates fit a 720x720 circular display,
+// center (360,360), safe radius ~330.
 export const level01 = [
   { id: 'intro', type: 'onboarding', config: {
-    text: 'You are the Sentinel. This is your body.\nLet\'s clear it together.',
-    practiceTarget: { x: 480, y: 300, radius: 46 },
+    text: 'You are the Sentinel.\nThis is your body. Let\'s clear it together.',
+    practiceTarget: { x: 360, y: 360, radius: 46 },
   } },
   { id: 'scan1', type: 'scan', config: {
-    cells: [{ x: 480, y: 230, radius: 26, hp: 1 }],
     label: 'Sweep the fog. Reveal what\'s hidden.',
+    cells: [{ x: 360, y: 340, radius: 26, hp: 1 }],
   } },
   { id: 'wave1', type: 'wave', config: {
     targetMs: 8000,
     enemies: [
-      { x: 360, y: 180, radius: 26, hp: 1 },
-      { x: 520, y: 150, radius: 26, hp: 1 },
-      { x: 470, y: 260, radius: 26, hp: 1 },
+      { x: 285, y: 330, radius: 26, hp: 1 },
+      { x: 435, y: 320, radius: 26, hp: 1 },
+      { x: 360, y: 440, radius: 26, hp: 1 },
     ],
   } },
   { id: 'support1', type: 'support', config: {
-    dimPatches: [{ x: 200, y: 400, radius: 44 }, { x: 760, y: 380, radius: 44 }],
+    dimPatches: [{ x: 255, y: 415, radius: 44 }, { x: 465, y: 415, radius: 44 }],
     label: 'Clear the fog. Restore your body.',
   } },
   { id: 'ally1', type: 'chemoAlly', config: {
     label: 'A treatment pulse is here — aim it. It fights with you.',
     cluster: [
-      { x: 620, y: 200, radius: 24, hp: 1 },
-      { x: 680, y: 240, radius: 24, hp: 1 },
-      { x: 640, y: 300, radius: 24, hp: 1 },
-      { x: 720, y: 300, radius: 24, hp: 1 },
+      { x: 420, y: 315, radius: 24, hp: 1 },
+      { x: 470, y: 355, radius: 24, hp: 1 },
+      { x: 430, y: 405, radius: 24, hp: 1 },
+      { x: 490, y: 395, radius: 24, hp: 1 },
     ],
   } },
   { id: 'boss1', type: 'boss', config: {
-    mass: { x: 480, y: 250, radius: 70, hp: 5 },
+    mass: { x: 360, y: 350, radius: 68, hp: 5 },
     label: 'Strike the mass — keep firing.',
   } },
   { id: 'end', type: 'resolution', config: {
