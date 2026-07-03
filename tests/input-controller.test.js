@@ -40,4 +40,21 @@ describe('InputController', () => {
     input.update();
     expect(input.justReleased()).toBe(false);
   });
+
+  it('ignores a button already held on the first frame until it is released', () => {
+    const src = fakeSource();
+    src.state.down = true; // held over from a previous scene at construction time
+    const input = new InputController(src);
+
+    input.update();
+    expect(input.justPressed()).toBe(false); // carried-over press must NOT count
+    input.update();
+    expect(input.justPressed()).toBe(false);
+
+    src.state.down = false; // release arms the controller
+    input.update();
+    src.state.down = true; // a genuine new press now counts
+    input.update();
+    expect(input.justPressed()).toBe(true);
+  });
 });

@@ -58,8 +58,6 @@ export class GameScene extends Phaser.Scene {
     this.label.setText(beat.config.label || '');
 
     switch (beat.type) {
-      case 'onboarding': // onboarding handled in its own scene; skip if present
-        this._advance(); break;
       case 'scan':
         this.label.setText(beat.config.label || 'Sweep the fog. Reveal what\'s hidden.');
         this._spawnCells(beat.config.cells);

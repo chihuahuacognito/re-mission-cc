@@ -26,7 +26,7 @@ export class LevelSelectScene extends Phaser.Scene {
     this.reticle = new Reticle(this);
     this.progress = new ProgressStore(safeLocalStorage());
 
-    this.nodes = LEVELS.map((lvl) => ({ ...lvl, ...COORDS[lvl.id], radius: 42 }));
+    this.nodes = LEVELS.map((lvl) => ({ ...lvl, ...(COORDS[lvl.id] || { x: 360, y: 360 }), radius: 42 }));
 
     // Faint connecting path through the nodes in manifest order.
     const path = this.add.graphics().setDepth(0);
@@ -66,7 +66,7 @@ export class LevelSelectScene extends Phaser.Scene {
       }
       node.graphic = g;
 
-      const orderLabel = node.id === 'ftue' ? 'T' : String(node.order);
+      const orderLabel = completed ? '✓' : (node.id === 'ftue' ? 'T' : String(node.order));
       this.add.text(node.x, node.y, orderLabel, {
         fontFamily: 'sans-serif', fontSize: '20px', color: labelColor,
       }).setOrigin(0.5).setDepth(6);

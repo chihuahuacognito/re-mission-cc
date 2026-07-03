@@ -7,7 +7,7 @@ function mem() {
 }
 
 describe('ProgressStore', () => {
-  it('starts empty and only ftue/l1 are unlocked', () => {
+  it('starts empty with only ftue unlocked (l1 gated on completing ftue)', () => {
     const p = new ProgressStore(mem());
     expect(p.completedIds()).toEqual([]);
     expect(p.isUnlocked('ftue')).toBe(true);   // no unlockedBy
