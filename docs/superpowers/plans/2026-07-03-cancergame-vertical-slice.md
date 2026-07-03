@@ -1359,7 +1359,12 @@ export class ResultScene extends Phaser.Scene {
       }).setOrigin(0.5).setDepth(10).setInteractive({ useHandCursor: true });
       btn.on('pointerdown', () => {
         // pre defaults to 3 in the slice (no pre-scene yet); ts from performance clock.
-        store.save({ pre: 3, post: n, ts: Math.round(this.time.now) });
+        // Never let a storage write (quota/private-mode) crash the tap.
+        try {
+          store.save({ pre: 3, post: n, ts: Math.round(this.time.now) });
+        } catch (e) {
+          // storage unavailable; proceed without blocking the experience
+        }
         this._thanks();
       });
     }
