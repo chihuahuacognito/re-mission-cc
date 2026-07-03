@@ -6,10 +6,15 @@ import { MousePointerAdapter } from '../input/MousePointerAdapter.js';
 import { DwellTracker } from '../input/DwellTracker.js';
 import { Reticle } from '../systems/Reticle.js';
 import { applyCircularChrome } from '../systems/CircularDisplay.js';
+import { ProgressStore } from '../systems/ProgressStore.js';
+import { safeLocalStorage } from '../systems/safeStorage.js';
 
 export class ResultScene extends Phaser.Scene {
   constructor() { super('Result'); }
-  init(data) { this._text = (data && data.text) || 'You restored this. Well done.'; }
+  init(data) {
+    this._text = (data && data.text) || 'You restored this. Well done.';
+    this._levelId = data && data.levelId;
+  }
 
   create() {
     this.input.setDefaultCursor('none');
@@ -36,8 +41,8 @@ export class ResultScene extends Phaser.Scene {
     this._store = new CheckInStore(this._safeStorage());
 
     // Rating buttons are plain visual text objects; hit-testing and
-    // activation (dwell OR click) happen in update(), same pattern as
-    // OnboardingScene's practice target.
+    // activation (dwell OR click) happen in update(), same pattern used
+    // for dwell/click targets elsewhere (e.g. LandingScene's Begin target).
     this._buttons = [];
     for (let n = 1; n <= 5; n++) {
       const bx = 360 + (n - 3) * 64;
@@ -79,6 +84,13 @@ export class ResultScene extends Phaser.Scene {
         } catch (e) {
           // storage unavailable; proceed without blocking the experience
         }
+        if (this._levelId) {
+          try {
+            new ProgressStore(this._safeStorage()).markComplete(this._levelId);
+          } catch (e) {
+            // storage unavailable; proceed without blocking the experience
+          }
+        }
         this._thanks();
       }
       return;
@@ -90,24 +102,18 @@ export class ResultScene extends Phaser.Scene {
     this.reticle.update(p, dwellState.progress);
     if (!this.done && (dwellState.completed || this.controller.justPressed())) {
       this.done = true;
-      this.scene.start('Onboarding');
+      this.scene.start('LevelSelect');
     }
   }
 
   _thanks() {
     this._buttons.forEach((b) => b.obj.setAlpha(0.4));
-    this.add.text(360, 570, 'Thank you. Dwell or tap to play again.', {
+    this.add.text(360, 570, 'Thank you. Dwell or tap to continue.', {
       fontFamily: 'sans-serif', fontSize: '18px', color: '#8fb3c9',
     }).setOrigin(0.5).setDepth(10);
   }
 
   _safeStorage() {
-    try {
-      window.localStorage.getItem('probe');
-      return window.localStorage;
-    } catch {
-      const m = new Map();
-      return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, v) };
-    }
+    return safeLocalStorage();
   }
 }

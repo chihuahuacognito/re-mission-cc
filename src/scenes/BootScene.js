@@ -21,7 +21,7 @@ export class BootScene extends Phaser.Scene {
       bg.refresh();
     }
 
-    this.scene.start('Onboarding');
+    this.scene.start('Landing');
   }
 
   _makeDot(key, color) {

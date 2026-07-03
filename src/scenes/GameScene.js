@@ -6,11 +6,16 @@ import { Reticle } from '../systems/Reticle.js';
 import { FeedbackSystem } from '../systems/FeedbackSystem.js';
 import { GameFlow } from '../systems/GameFlow.js';
 import { resolveInteraction } from '../systems/resolveInteraction.js';
-import { level01 } from '../data/level01.js';
+import { getLevel } from '../levels/index.js';
 import { applyCircularChrome } from '../systems/CircularDisplay.js';
 
 export class GameScene extends Phaser.Scene {
   constructor() { super('Game'); }
+
+  init(data) {
+    this.levelId = (data && data.levelId) || 'l1';
+    this.levelBeats = getLevel(this.levelId).beats;
+  }
 
   create() {
     this.input.setDefaultCursor('none');
@@ -19,7 +24,7 @@ export class GameScene extends Phaser.Scene {
     this.dwell = new DwellTracker({ dwellMs: 800 });
     this.reticle = new Reticle(this);
     this.fx = new FeedbackSystem(this);
-    this.flow = new GameFlow(level01);
+    this.flow = new GameFlow(this.levelBeats);
 
     this.label = this.add.text(360, 80, '', {
       fontFamily: 'sans-serif', fontSize: '18px', color: '#cfefff', align: 'center',
@@ -100,8 +105,8 @@ export class GameScene extends Phaser.Scene {
   }
 
   _finish() {
-    const end = level01.find((b) => b.type === 'resolution');
-    this.scene.start('Result', { text: end.config.text });
+    const end = this.levelBeats.find((b) => b.type === 'resolution');
+    this.scene.start('Result', { levelId: this.levelId, text: end.config.text });
   }
 
   update(_time, deltaMs) {
