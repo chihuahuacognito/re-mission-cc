@@ -5,7 +5,7 @@ import { DwellTracker } from '../input/DwellTracker.js';
 import { Reticle } from '../systems/Reticle.js';
 import { FeedbackSystem } from '../systems/FeedbackSystem.js';
 import { GameFlow } from '../systems/GameFlow.js';
-import { selectTarget } from '../systems/targeting.js';
+import { resolveInteraction } from '../systems/resolveInteraction.js';
 import { level01 } from '../data/level01.js';
 
 export class GameScene extends Phaser.Scene {
@@ -54,8 +54,8 @@ export class GameScene extends Phaser.Scene {
       case 'onboarding': // onboarding handled in its own scene; skip if present
         this._advance(); break;
       case 'scan':
-        this.label.setText('Sweep the fog. Reveal what\'s hidden.');
-        this._spawnCells([{ x: 480, y: 230, radius: 26, hp: 1 }]);
+        this.label.setText(beat.config.label || 'Sweep the fog. Reveal what\'s hidden.');
+        this._spawnCells(beat.config.cells);
         break;
       case 'wave':
         this._spawnCells(beat.config.enemies);
@@ -72,7 +72,6 @@ export class GameScene extends Phaser.Scene {
         break;
       case 'boss':
         this._spawnCells([beat.config.mass], 'boss');
-        this.bossChargeMs = beat.config.chargeMs;
         break;
       case 'resolution':
         this._finish(); break;
@@ -110,30 +109,16 @@ export class GameScene extends Phaser.Scene {
     const targets = this.cells.map((c) => ({
       id: c.id, x: c.sprite.x, y: c.sprite.y, radius: c.radius,
     }));
+    const supportTargets = this.supports.map((s) => ({
+      id: s.id, x: s.x, y: s.y, radius: s.radius,
+    }));
     const assist = this.flow.difficulty.assistRadius();
-    const targetId = selectTarget(p, targets, assist);
+    const { supportId, targetId } = resolveInteraction(p, targets, supportTargets, assist);
 
     // Support patches use dwell-to-restore.
-    let dwellKey = null;
-    let overSupport = this.supports.find(
-      (s) => Phaser.Math.Distance.Between(p.x, p.y, s.x, s.y) <= s.radius);
-    let effectiveTargetId = targetId;
-    if (overSupport && targetId) {
-      // Both a support patch and a cell target are under the pointer: act on
-      // whichever is spatially closer rather than always preferring the support.
-      const cell = this.cells.find((c) => c.id === targetId);
-      const supportDist = Phaser.Math.Distance.Between(p.x, p.y, overSupport.x, overSupport.y);
-      const targetDist = cell
-        ? Phaser.Math.Distance.Between(p.x, p.y, cell.sprite.x, cell.sprite.y)
-        : Infinity;
-      if (targetDist < supportDist) {
-        overSupport = null;
-      } else {
-        effectiveTargetId = null;
-      }
-    }
-    if (overSupport) dwellKey = overSupport.id;
-    else if (effectiveTargetId) dwellKey = effectiveTargetId;
+    const overSupport = supportId ? this.supports.find((s) => s.id === supportId) : null;
+    const effectiveTargetId = targetId;
+    const dwellKey = overSupport ? overSupport.id : effectiveTargetId;
 
     const dwellState = this.dwell.update(deltaMs, dwellKey);
     this.reticle.update(p, dwellState.progress);

@@ -8,7 +8,7 @@ Verify each against the therapeutic constraints (spec §2):
 - [ ] Entire slice is completable one-handed using ONLY dwell (no clicks).
 - [ ] Entire slice is completable using ONLY activate (clicks), no dwell.
 - [ ] Coarse, jittery pointing still hits targets (aim-assist visibly forgiving).
-- [ ] Deliberately stalling on the wave makes enemies slower/assist wider — never harder.
+- [ ] Deliberately stalling/missing widens the aim-assist radius (via DifficultySystem.assistRadius) — the game only ever gets more forgiving, never harder.
 - [ ] Onboarding teaches pointer + activate + dwell before real gameplay.
 - [ ] The chemo-pulse beat reads as "treatment helping me," not an enemy.
 - [ ] Boss clear + region bloom lands as "I did that" (agency payoff).

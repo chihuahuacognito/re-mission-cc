@@ -1,14 +1,22 @@
 import Phaser from 'phaser';
 import { CheckInStore } from '../clinical/CheckIn.js';
 import { FeedbackSystem } from '../systems/FeedbackSystem.js';
+import { InputController } from '../input/InputController.js';
+import { MousePointerAdapter } from '../input/MousePointerAdapter.js';
+import { DwellTracker } from '../input/DwellTracker.js';
+import { Reticle } from '../systems/Reticle.js';
 
 export class ResultScene extends Phaser.Scene {
   constructor() { super('Result'); }
   init(data) { this._text = (data && data.text) || 'You restored this. Well done.'; }
 
   create() {
-    this.input.setDefaultCursor('default');
+    this.input.setDefaultCursor('none');
     const fx = new FeedbackSystem(this);
+
+    this.controller = new InputController(new MousePointerAdapter(this.input));
+    this.dwell = new DwellTracker({ dwellMs: 700 });
+    this.reticle = new Reticle(this);
 
     // "Bloom": expanding healthy light.
     const bloom = this.add.image(480, 250, 'healthy').setDisplaySize(20, 20).setAlpha(0.9);
@@ -23,35 +31,72 @@ export class ResultScene extends Phaser.Scene {
       fontFamily: 'sans-serif', fontSize: '18px', color: '#cfefff',
     }).setOrigin(0.5).setDepth(10);
 
-    const store = new CheckInStore(this._safeStorage());
+    this._store = new CheckInStore(this._safeStorage());
+
+    // Rating buttons are plain visual text objects; hit-testing and
+    // activation (dwell OR click) happen in update(), same pattern as
+    // OnboardingScene's practice target.
+    this._buttons = [];
     for (let n = 1; n <= 5; n++) {
       const bx = 480 + (n - 3) * 70;
-      const btn = this.add.text(bx, 360, String(n), {
+      const by = 360;
+      const obj = this.add.text(bx, by, String(n), {
         fontFamily: 'sans-serif', fontSize: '30px', color: '#7fe7ff',
         backgroundColor: '#12203a', padding: { x: 14, y: 8 },
-      }).setOrigin(0.5).setDepth(10).setInteractive({ useHandCursor: true });
-      btn.on('pointerdown', () => {
+      }).setOrigin(0.5).setDepth(10);
+      this._buttons.push({ key: `rating-${n}`, value: n, obj, x: bx, y: by, radius: 34 });
+    }
+
+    this.rated = false; // guards against a double-save once a rating is chosen
+    this.done = false;  // guards against a double-fire of the replay restart
+  }
+
+  update(_time, deltaMs) {
+    this.controller.update();
+    const p = this.controller.pointer;
+
+    if (!this.rated) {
+      let overBtn = null;
+      for (const b of this._buttons) {
+        if (Phaser.Math.Distance.Between(p.x, p.y, b.x, b.y) <= b.radius) {
+          overBtn = b;
+          break;
+        }
+      }
+      const dwellState = this.dwell.update(deltaMs, overBtn ? overBtn.key : null);
+      this.reticle.update(p, dwellState.progress);
+
+      const activated = overBtn && (dwellState.completed || this.controller.justPressed());
+      if (activated) {
+        this.rated = true;
         // pre defaults to 3 in the slice (no pre-scene yet); ts from performance clock.
         // Never let a storage write (quota/private-mode) crash the tap — the check-in
         // is best-effort; the player's "play again" flow must always continue.
         try {
-          store.save({ pre: 3, post: n, ts: Math.round(this.time.now) });
+          this._store.save({ pre: 3, post: overBtn.value, ts: Math.round(this.time.now) });
         } catch (e) {
           // storage unavailable; proceed without blocking the experience
         }
         this._thanks();
-      });
+      }
+      return;
+    }
+
+    // Replay affordance only arms after a rating is chosen: dwell anywhere on
+    // screen, or click, restarts the slice.
+    const dwellState = this.dwell.update(deltaMs, 'replay');
+    this.reticle.update(p, dwellState.progress);
+    if (!this.done && (dwellState.completed || this.controller.justPressed())) {
+      this.done = true;
+      this.scene.start('Onboarding');
     }
   }
 
   _thanks() {
-    this.children.list
-      .filter((c) => c.setInteractive && c.input)
-      .forEach((c) => c.disableInteractive());
-    this.add.text(480, 440, 'Thank you. Tap to play again.', {
+    this._buttons.forEach((b) => b.obj.setAlpha(0.4));
+    this.add.text(480, 440, 'Thank you. Dwell or tap to play again.', {
       fontFamily: 'sans-serif', fontSize: '18px', color: '#8fb3c9',
     }).setOrigin(0.5).setDepth(10);
-    this.input.once('pointerdown', () => this.scene.start('Onboarding'));
   }
 
   _safeStorage() {

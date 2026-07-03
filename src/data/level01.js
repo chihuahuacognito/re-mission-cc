@@ -5,15 +5,15 @@ export const level01 = [
     practiceTarget: { x: 480, y: 300, radius: 46 },
   } },
   { id: 'scan1', type: 'scan', config: {
-    fogRects: [{ x: 300, y: 120, w: 360, h: 220 }],
-    reveal: 'cluster1',
+    cells: [{ x: 480, y: 230, radius: 26, hp: 1 }],
+    label: 'Sweep the fog. Reveal what\'s hidden.',
   } },
   { id: 'wave1', type: 'wave', config: {
     targetMs: 8000,
     enemies: [
-      { x: 360, y: 180, radius: 26, hp: 1, speed: 20 },
-      { x: 520, y: 150, radius: 26, hp: 1, speed: 20 },
-      { x: 470, y: 260, radius: 26, hp: 1, speed: 20 },
+      { x: 360, y: 180, radius: 26, hp: 1 },
+      { x: 520, y: 150, radius: 26, hp: 1 },
+      { x: 470, y: 260, radius: 26, hp: 1 },
     ],
   } },
   { id: 'support1', type: 'support', config: {
@@ -31,8 +31,7 @@ export const level01 = [
   } },
   { id: 'boss1', type: 'boss', config: {
     mass: { x: 480, y: 250, radius: 70, hp: 5 },
-    chargeMs: 900,
-    label: 'Charge your strike.',
+    label: 'Strike the mass — keep firing.',
   } },
   { id: 'end', type: 'resolution', config: {
     text: 'You restored this. Well done.',

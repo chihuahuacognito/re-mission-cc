@@ -14,6 +14,9 @@ export class DifficultySystem {
     }
   }
 
+  // Reserved for future levels with moving enemies. This vertical slice's
+  // enemies are intentionally static (calm, always-winnable), so this value
+  // is currently computed but not consumed anywhere in the slice.
   enemySpeedMultiplier() {
     return 1 - this._struggle * (1 - this._speedFloor);
   }
