@@ -44,6 +44,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   _enterBeat(beat) {
+    this._advancing = false;
     this._clearActors();
     this.beatStart = this.time.now;
     if (!beat) { this._finish(); return; }
@@ -114,10 +115,25 @@ export class GameScene extends Phaser.Scene {
 
     // Support patches use dwell-to-restore.
     let dwellKey = null;
-    const overSupport = this.supports.find(
+    let overSupport = this.supports.find(
       (s) => Phaser.Math.Distance.Between(p.x, p.y, s.x, s.y) <= s.radius);
+    let effectiveTargetId = targetId;
+    if (overSupport && targetId) {
+      // Both a support patch and a cell target are under the pointer: act on
+      // whichever is spatially closer rather than always preferring the support.
+      const cell = this.cells.find((c) => c.id === targetId);
+      const supportDist = Phaser.Math.Distance.Between(p.x, p.y, overSupport.x, overSupport.y);
+      const targetDist = cell
+        ? Phaser.Math.Distance.Between(p.x, p.y, cell.sprite.x, cell.sprite.y)
+        : Infinity;
+      if (targetDist < supportDist) {
+        overSupport = null;
+      } else {
+        effectiveTargetId = null;
+      }
+    }
     if (overSupport) dwellKey = overSupport.id;
-    else if (targetId) dwellKey = targetId;
+    else if (effectiveTargetId) dwellKey = effectiveTargetId;
 
     const dwellState = this.dwell.update(deltaMs, dwellKey);
     this.reticle.update(p, dwellState.progress);
@@ -129,8 +145,8 @@ export class GameScene extends Phaser.Scene {
       overSupport.sprite.setAlpha(1);
       this.fx.burst(overSupport.x, overSupport.y, 0x64ffb0);
       this.supports = this.supports.filter((s) => s !== overSupport);
-    } else if (targetId) {
-      const cell = this.cells.find((c) => c.id === targetId);
+    } else if (effectiveTargetId) {
+      const cell = this.cells.find((c) => c.id === effectiveTargetId);
       if (cell) {
         cell.hp -= 1;
         this.fx.burst(cell.sprite.x, cell.sprite.y, 0xff5c7a);
@@ -138,14 +154,15 @@ export class GameScene extends Phaser.Scene {
         this.fx.tone('hit');
         if (cell.hp <= 0) {
           cell.sprite.destroy();
-          this.cells = this.cells.filter((c) => c.id !== targetId);
+          this.cells = this.cells.filter((c) => c.id !== effectiveTargetId);
         } else {
           this.tweens.add({ targets: cell.sprite, scale: cell.sprite.scale * 0.85, duration: 120 });
         }
       }
     }
 
-    if (this.cells.length === 0 && this.supports.length === 0) {
+    if (!this._advancing && this.cells.length === 0 && this.supports.length === 0) {
+      this._advancing = true;
       this.time.delayedCall(250, () => this._advance());
     }
   }
