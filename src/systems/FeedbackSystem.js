@@ -22,7 +22,10 @@ export class FeedbackSystem {
   }
 
   tone(kind) {
-    if (this.scene.sound && this.scene.sound.get && this.scene.sound.get(kind)) {
+    // Check the audio CACHE (was the key loaded?), not sound.get() which only
+    // finds already-instantiated Sound objects and would never become truthy.
+    const audioCache = this.scene.cache && this.scene.cache.audio;
+    if (audioCache && audioCache.exists(kind)) {
       this.scene.sound.play(kind);
     }
     // else: no-op until audio assets are added
