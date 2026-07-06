@@ -4,6 +4,7 @@ import { MousePointerAdapter } from '../input/MousePointerAdapter.js';
 import { DwellTracker } from '../input/DwellTracker.js';
 import { Reticle } from '../systems/Reticle.js';
 import { applyCircularChrome } from '../systems/CircularDisplay.js';
+import { DWELL_MS } from '../systems/pacing.js';
 
 export class LandingScene extends Phaser.Scene {
   constructor() { super('Landing'); }
@@ -13,7 +14,7 @@ export class LandingScene extends Phaser.Scene {
     applyCircularChrome(this);
 
     this.controller = new InputController(new MousePointerAdapter(this.input));
-    this.dwell = new DwellTracker({ dwellMs: 700 });
+    this.dwell = new DwellTracker({ dwellMs: DWELL_MS });
     this.reticle = new Reticle(this);
 
     this.add.text(360, 235, 'SENTINEL', {
@@ -31,7 +32,7 @@ export class LandingScene extends Phaser.Scene {
     this._t = { x: 360, y: 430, radius: 70 };
 
     this.add.text(360, 600, 'Point and hold still, or click.', {
-      fontFamily: 'sans-serif', fontSize: '15px', color: '#8fb3c9', align: 'center',
+      fontFamily: 'sans-serif', fontSize: '18px', color: '#8fb3c9', align: 'center',
     }).setOrigin(0.5).setDepth(10);
 
     this.done = false;

@@ -20,10 +20,17 @@ describe('CheckInStore', () => {
   it('appends records with a computed delta and reads them back', () => {
     const store = new CheckInStore(memStorage());
     const rec = store.save({ pre: 2, post: 4, ts: 1000 });
-    expect(rec).toEqual({ pre: 2, post: 4, delta: 2, ts: 1000 });
+    expect(rec).toEqual({ pre: 2, post: 4, delta: 2, ts: 1000, baseline: 'measured' });
     store.save({ pre: 3, post: 3, ts: 2000 });
     expect(store.all()).toHaveLength(2);
     expect(store.all()[1].delta).toBe(0);
+  });
+
+  it('records no delta and flags a placeholder baseline when pre is a stand-in', () => {
+    const store = new CheckInStore(memStorage());
+    const rec = store.save({ pre: 3, post: 5, ts: 1000, preIsPlaceholder: true });
+    expect(rec.baseline).toBe('placeholder');
+    expect(rec.delta).toBeNull();
   });
 
   it('returns an empty array when nothing is stored', () => {

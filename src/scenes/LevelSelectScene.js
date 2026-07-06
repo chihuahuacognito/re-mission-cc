@@ -7,6 +7,7 @@ import { applyCircularChrome } from '../systems/CircularDisplay.js';
 import { ProgressStore } from '../systems/ProgressStore.js';
 import { safeLocalStorage } from '../systems/safeStorage.js';
 import { LEVELS } from '../levels/index.js';
+import { DWELL_MS } from '../systems/pacing.js';
 
 const COORDS = {
   ftue: { x: 360, y: 520 },
@@ -22,7 +23,7 @@ export class LevelSelectScene extends Phaser.Scene {
     this.input.setDefaultCursor('none');
     applyCircularChrome(this);
     this.controller = new InputController(new MousePointerAdapter(this.input));
-    this.dwell = new DwellTracker({ dwellMs: 700 });
+    this.dwell = new DwellTracker({ dwellMs: DWELL_MS });
     this.reticle = new Reticle(this);
     this.progress = new ProgressStore(safeLocalStorage());
 
@@ -66,28 +67,26 @@ export class LevelSelectScene extends Phaser.Scene {
       }
       node.graphic = g;
 
+      // Node shows only a glyph; the full title/region/subtitle appears large in
+      // the center panel on hover (below) rather than crammed in tiny text here.
       const orderLabel = completed ? '✓' : (node.id === 'ftue' ? 'T' : String(node.order));
       this.add.text(node.x, node.y, orderLabel, {
-        fontFamily: 'sans-serif', fontSize: '20px', color: labelColor,
-      }).setOrigin(0.5).setDepth(6);
-
-      this.add.text(node.x, node.y + 56, node.title, {
-        fontFamily: 'sans-serif', fontSize: '13px', color: labelColor, align: 'center',
+        fontFamily: 'sans-serif', fontSize: '22px', color: labelColor,
       }).setOrigin(0.5).setDepth(6);
     });
 
     this.infoTitle = this.add.text(360, 95, '', {
       fontFamily: 'sans-serif', fontSize: '22px', color: '#eafff5', align: 'center',
     }).setOrigin(0.5).setDepth(10);
-    this.infoRegion = this.add.text(360, 128, '', {
-      fontFamily: 'sans-serif', fontSize: '15px', color: '#9fdbe8', align: 'center',
+    this.infoRegion = this.add.text(360, 130, '', {
+      fontFamily: 'sans-serif', fontSize: '18px', color: '#9fdbe8', align: 'center',
     }).setOrigin(0.5).setDepth(10);
-    this.infoSubtitle = this.add.text(360, 150, '', {
-      fontFamily: 'sans-serif', fontSize: '13px', color: '#8fb3c9', align: 'center',
+    this.infoSubtitle = this.add.text(360, 158, '', {
+      fontFamily: 'sans-serif', fontSize: '18px', color: '#8fb3c9', align: 'center',
     }).setOrigin(0.5).setDepth(10);
 
     this.add.text(360, 360, `${this.progress.clearedCount()} of 3 cleared`, {
-      fontFamily: 'sans-serif', fontSize: '16px', color: '#cfefff',
+      fontFamily: 'sans-serif', fontSize: '18px', color: '#cfefff',
     }).setOrigin(0.5).setDepth(6);
 
     this.done = false;

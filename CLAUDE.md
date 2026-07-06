@@ -70,6 +70,12 @@ mask, and a glowing rim. Tune the background gradient in `BootScene.js`; the rim
 **Difficulty** (`src/systems/DifficultySystem.js`) only ever eases (widens aim-assist / — for
 future moving-enemy levels — slows enemies). It has no failure concept by construction.
 
+**Pacing is deliberately slow and centralized.** `src/systems/pacing.js` is the single source of
+interaction tempo: `DWELL_MS` (hover-to-lock fill, 1100) and `BEAT_SETTLE_MS` (post-beat pause,
+950). **Every scene imports these — never hardcode a `dwellMs` literal.** The pace must feel
+identical everywhere: the patient learns the tempo from the first touch (Landing), so a fast menu
+undoes a calm fight. Tune tempo in one place.
+
 ### Scene flow
 
 ```
@@ -111,6 +117,14 @@ docs/                    # specs, plans, playtest checklist (Date + Content Type
 ## Conventions & gotchas
 
 - Match existing patterns; keep files focused and small.
+- **Patient-facing text has an 18px floor.** Players may have chemo-related visual fatigue and
+  read a circular panel at bedside distance. Don't add sub-18px copy. In `LevelSelectScene`, node
+  detail (title/region/subtitle) lives in the large center panel on hover — nodes show only a
+  glyph — rather than crammed small text under each node.
+- **No fabricated clinical evidence.** The pre-session baseline is a placeholder (`pre:3`) until a
+  real pre-scene exists. `CheckInStore.save({..., preIsPlaceholder: true})` therefore stores
+  `delta: null` + `baseline: 'placeholder'` — a delta off a fake baseline must never be recorded
+  as if real. Keep this honest when adding the real pre-scene.
 - Docs go in `docs/` with a `**Date:**` + `**Content Type:**` header (user's global rule).
 - In this dev environment, subagents cannot `git commit` (permission-blocked): they `git add`,
   and the controller commits.
@@ -119,9 +133,11 @@ docs/                    # specs, plans, playtest checklist (Date + Content Type
 ## Current status (2026-07-04)
 
 Playable vertical slice + full navigable structure (Landing, circular Level Select, FTUE, 3
-levels of rising complexity, progress persistence). 32 unit tests pass; build clean. **All new
-scene visuals are browser-verification-pending** — the human needs to playtest and tune framing,
-pacing, difficulty, and look.
+levels of rising complexity, progress persistence). 33 unit tests pass; build clean. Pacing
+centralized + slowed for patient comfort (`pacing.js`); patient text floored at 18px; check-in
+placeholder guarded against false deltas. **All scene visuals + felt pace are browser/device-
+verification-pending** — the human needs to playtest and tune framing, pacing, difficulty, look,
+and legibility on the actual circular display (see `docs/playtest-checklist.md`).
 
 ## Out of scope so far
 

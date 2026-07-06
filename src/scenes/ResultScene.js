@@ -8,6 +8,7 @@ import { Reticle } from '../systems/Reticle.js';
 import { applyCircularChrome } from '../systems/CircularDisplay.js';
 import { ProgressStore } from '../systems/ProgressStore.js';
 import { safeLocalStorage } from '../systems/safeStorage.js';
+import { DWELL_MS } from '../systems/pacing.js';
 
 export class ResultScene extends Phaser.Scene {
   constructor() { super('Result'); }
@@ -22,7 +23,7 @@ export class ResultScene extends Phaser.Scene {
     const fx = new FeedbackSystem(this);
 
     this.controller = new InputController(new MousePointerAdapter(this.input));
-    this.dwell = new DwellTracker({ dwellMs: 700 });
+    this.dwell = new DwellTracker({ dwellMs: DWELL_MS });
     this.reticle = new Reticle(this);
 
     // "Bloom": expanding healthy light.
@@ -76,11 +77,14 @@ export class ResultScene extends Phaser.Scene {
       const activated = overBtn && (dwellState.completed || this.controller.justPressed());
       if (activated) {
         this.rated = true;
-        // pre defaults to 3 in the slice (no pre-scene yet); ts from performance clock.
-        // Never let a storage write (quota/private-mode) crash the tap — the check-in
-        // is best-effort; the player's "play again" flow must always continue.
+        // pre is a placeholder in the slice (no pre-scene yet) — flag it so no
+        // false delta is recorded. ts from performance clock. Never let a storage
+        // write (quota/private-mode) crash the tap — the check-in is best-effort;
+        // the player's "play again" flow must always continue.
         try {
-          this._store.save({ pre: 3, post: overBtn.value, ts: Math.round(this.time.now) });
+          this._store.save({
+            pre: 3, post: overBtn.value, ts: Math.round(this.time.now), preIsPlaceholder: true,
+          });
         } catch (e) {
           // storage unavailable; proceed without blocking the experience
         }

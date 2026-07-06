@@ -8,6 +8,7 @@ import { GameFlow } from '../systems/GameFlow.js';
 import { resolveInteraction } from '../systems/resolveInteraction.js';
 import { getLevel } from '../levels/index.js';
 import { applyCircularChrome } from '../systems/CircularDisplay.js';
+import { DWELL_MS, BEAT_SETTLE_MS } from '../systems/pacing.js';
 
 export class GameScene extends Phaser.Scene {
   constructor() { super('Game'); }
@@ -21,7 +22,7 @@ export class GameScene extends Phaser.Scene {
     this.input.setDefaultCursor('none');
     applyCircularChrome(this);
     this.controller = new InputController(new MousePointerAdapter(this.input));
-    this.dwell = new DwellTracker({ dwellMs: 800 });
+    this.dwell = new DwellTracker({ dwellMs: DWELL_MS });
     this.reticle = new Reticle(this);
     this.fx = new FeedbackSystem(this);
     this.flow = new GameFlow(this.levelBeats);
@@ -153,7 +154,7 @@ export class GameScene extends Phaser.Scene {
 
     if (!this._advancing && this.cells.length === 0 && this.supports.length === 0) {
       this._advancing = true;
-      this.time.delayedCall(250, () => this._advance());
+      this.time.delayedCall(BEAT_SETTLE_MS, () => this._advance());
     }
   }
 }

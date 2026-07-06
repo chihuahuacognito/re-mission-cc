@@ -7,6 +7,7 @@ import { FeedbackSystem } from '../systems/FeedbackSystem.js';
 import { applyCircularChrome } from '../systems/CircularDisplay.js';
 import { ProgressStore } from '../systems/ProgressStore.js';
 import { safeLocalStorage } from '../systems/safeStorage.js';
+import { DWELL_MS } from '../systems/pacing.js';
 
 // A staged tutorial that never fails: aim -> fire -> restore -> done.
 export class FTUEScene extends Phaser.Scene {
@@ -16,7 +17,8 @@ export class FTUEScene extends Phaser.Scene {
     this.input.setDefaultCursor('none');
     applyCircularChrome(this);
     this.controller = new InputController(new MousePointerAdapter(this.input));
-    this.dwell = new DwellTracker({ dwellMs: 700 });
+    // Unhurried hover-to-lock — teaches the same calm pace the levels use.
+    this.dwell = new DwellTracker({ dwellMs: DWELL_MS });
     this.reticle = new Reticle(this);
     this.fx = new FeedbackSystem(this);
 
@@ -69,7 +71,7 @@ export class FTUEScene extends Phaser.Scene {
       case 3: {
         this.prompt.setText('You can\'t lose here.\nThis is your fight, at your pace.');
         const hint = this.add.text(360, 500, 'Dwell or tap to continue.', {
-          fontFamily: 'sans-serif', fontSize: '16px', color: '#8fb3c9', align: 'center',
+          fontFamily: 'sans-serif', fontSize: '18px', color: '#8fb3c9', align: 'center',
         }).setOrigin(0.5).setDepth(10);
         this._targetObjs.push(hint);
         this._target = null;
