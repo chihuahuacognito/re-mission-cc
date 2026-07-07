@@ -27,3 +27,36 @@ describe('level manifest', () => {
     expect(getLevel('nope')).toBe(null);
   });
 });
+
+describe('hunt levels', () => {
+  const HUNT_IDS = ['l1', 'l2', 'l3'];
+
+  it('l1–l3 are exactly one hunt beat + one resolution beat', () => {
+    for (const id of HUNT_IDS) {
+      const beats = getLevel(id).beats;
+      expect(beats.length).toBe(2);
+      expect(beats[0].type).toBe('hunt');
+      expect(beats[1].type).toBe('resolution');
+    }
+  });
+
+  it('hunt configs carry every field GameScene needs', () => {
+    for (const id of HUNT_IDS) {
+      const c = getLevel(id).beats[0].config;
+      expect(c.missionTotal).toBeGreaterThan(0);
+      expect(c.maxConcurrent).toBeGreaterThan(0);
+      expect(c.healthyCount).toBeGreaterThan(0);
+      expect(c.baseSpeed).toBeGreaterThan(0);
+      expect(c.killTargetMs).toBeGreaterThan(0);
+      expect(c.cellRadius).toBeGreaterThan(0);
+      expect(c.twoHpEvery).toBeGreaterThanOrEqual(0);
+      expect(typeof c.label).toBe('string');
+    }
+  });
+
+  it('difficulty rises purely by drift speed L1 -> L3', () => {
+    const speeds = HUNT_IDS.map((id) => getLevel(id).beats[0].config.baseSpeed);
+    expect(speeds[0]).toBeLessThan(speeds[1]);
+    expect(speeds[1]).toBeLessThan(speeds[2]);
+  });
+});
