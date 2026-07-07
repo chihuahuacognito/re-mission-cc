@@ -31,8 +31,9 @@ export class HudSystem {
     this._combo = scene.add.text(595, 340, 'x1', {
       fontFamily: 'sans-serif', fontSize: '24px', color: '#9dff8a',
       backgroundColor: '#10241a', padding: { x: 12, y: 8 },
-    }).setOrigin(0.5).setDepth(1001).setAlpha(0.55);
+    }).setOrigin(0.5).setDepth(1001).setAlpha(0);
     this._comboValue = 1;
+    this._comboRevealed = false; // stays hidden until the first cancer hit
   }
 
   setScore(total) {
@@ -46,6 +47,11 @@ export class HudSystem {
   setCombo(multiplier) {
     const grew = multiplier > this._comboValue;
     this._comboValue = multiplier;
+    // The badge doesn't exist until the player earns it: it appears only once a
+    // cancer hit pushes the multiplier past x1, then stays for the rest of the
+    // level (dimmed at x1 to show a broken combo).
+    if (multiplier > 1) this._comboRevealed = true;
+    if (!this._comboRevealed) { this._combo.setAlpha(0); return; }
     this._combo.setText(`x${multiplier}`);
     this._combo.setAlpha(multiplier === 1 ? 0.55 : 1);
     if (grew) {

@@ -175,7 +175,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   _makeAmbience() {
-    for (let i = 0; i < 4; i++) this._ambientMover(SPRITES.rbc, 22, 0.5, 8, -5);
+    for (let i = 0; i < 4; i++) this._ambientMover(SPRITES.rbc, 22, 0.4, 8, -5);
     for (let i = 0; i < 10; i++) {
       this._ambientMover(SPRITES.bokeh, 6 + Math.random() * 8, 0.25, 4, -6);
     }
