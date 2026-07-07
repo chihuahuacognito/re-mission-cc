@@ -1,4 +1,4 @@
-import Phaser from 'phaser';
+import Phaser from './engine/phaser-shim.js';
 import { createGameConfig } from './config.js';
 import { BootScene } from './scenes/BootScene.js';
 import { LandingScene } from './scenes/LandingScene.js';

@@ -1,4 +1,4 @@
-import Phaser from 'phaser';
+import Phaser from '../engine/phaser-shim.js';
 import { SPRITES } from '../systems/sprites.js';
 
 export class BootScene extends Phaser.Scene {

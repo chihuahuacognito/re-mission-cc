@@ -1,4 +1,4 @@
-import Phaser from 'phaser';
+import Phaser from '../engine/phaser-shim.js';
 import { InputController } from '../input/InputController.js';
 import { MousePointerAdapter } from '../input/MousePointerAdapter.js';
 import { DwellTracker } from '../input/DwellTracker.js';

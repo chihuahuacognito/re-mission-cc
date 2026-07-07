@@ -7,9 +7,9 @@
     "doc": "docs"
   },
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
+    "serve": "python -m http.server 8000",
+    "serve:npx": "npx serve -l 8000 .",
+    "check": "node scripts/check.mjs",
     "test": "vitest run",
     "test:watch": "vitest"
   },
@@ -17,11 +17,8 @@
   "author": "",
   "license": "ISC",
   "type": "module",
-  "dependencies": {
-    "phaser": "^3.90.0"
-  },
+  "engines": { "node": ">=18" },
   "devDependencies": {
-    "vite": "^5.4.21",
     "vitest": "^2.1.9"
   }
 }

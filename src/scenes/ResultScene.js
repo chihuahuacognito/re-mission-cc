@@ -1,4 +1,4 @@
-import Phaser from 'phaser';
+import Phaser from '../engine/phaser-shim.js';
 import { CheckInStore } from '../clinical/CheckIn.js';
 import { FeedbackSystem } from '../systems/FeedbackSystem.js';
 import { InputController } from '../input/InputController.js';
