@@ -32,15 +32,16 @@ When changing anything, do not violate these. They are the product.
 ## Commands
 
 ```bash
-npm run dev     # Vite dev server — open the printed URL in a browser to playtest
-npm run build   # production build (also the compile gate for scene changes)
-npm test        # Vitest unit tests (pure-logic only)
+npm run serve   # static server (python http.server) — open the printed URL to playtest
+npm test        # Vitest unit tests (pure-logic + engine)
+npm run check   # node --check parse gate over src/ (replaces the old build gate)
 ```
 
 ## Tech stack
 
-Phaser 3 (`^3.80`), plain JavaScript (ES modules), Vite, Vitest, Node 18+. No TypeScript.
-Capacitor is intended later to wrap the same web build as a native app; not added yet.
+Plain JavaScript (ES modules) on a small hand-rolled Canvas 2D harness (`src/engine/`),
+Vitest, Node 18+. Buildless: served statically, no bundler. (Phaser and Vite were removed
+in the 2026-07-07 conversion — see `docs/superpowers/specs/2026-07-07-html-canvas-conversion-design.md`.)
 
 ## Architecture
 
@@ -109,10 +110,8 @@ docs/                    # specs, plans, playtest checklist (Date + Content Type
 
 - **Pure logic is unit-tested** (Vitest): input, difficulty, targeting, dwell, beat-sequencer,
   game-flow, resolveInteraction, checkin, progress-store, level manifest, config.
-- **Scenes have NO automated tests** (Phaser rendering). Their gate is `npm run build` + a
-  **manual in-browser playtest** — see `docs/playtest-checklist.md`, whose items map directly to
-  the therapeutic constraints above. When you change a scene, you cannot fully verify it without a
-  browser; say so.
+- **Scenes have NO automated tests** (Canvas rendering). Their gate is `npm run check` (parse) + a
+  **manual in-browser playtest** (served via `npm run serve`; ES modules require a static server, not `file://`).
 
 ## Conventions & gotchas
 
@@ -142,6 +141,11 @@ Chemo-ally beat is currently unused by any level (deliberate scope cut — see
 `docs/superpowers/specs/2026-07-07-arcade-hud-hunt-levels-design.md`); the beat
 type still renders, so it can return. **All scene visuals + felt pace are
 browser/device-verification-pending** — see `docs/playtest-checklist.md`.
+
+Converted off Phaser to a dependency-free Canvas 2D harness (`src/engine/`) + a
+`Phaser`-shaped shim; scene/system/logic bodies are unchanged (only the Phaser import
+source moved). Buildless — run `npm run serve` and open the URL; `npm test` covers logic
++ engine; `npm run check` is the parse gate. Rendering/visual parity is browser-verified.
 
 ## Out of scope so far
 

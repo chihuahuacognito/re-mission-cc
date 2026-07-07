@@ -50,3 +50,16 @@ Playfield look:
 - [ ] 2-HP cells (L3) visibly crack after the first hit.
 - [ ] Background ambience (red blood cells, bokeh) reads as depth, not as targets.
 - [ ] Result screen shows the score once, celebratory, with no comparison to past runs.
+
+## Post-Phaser conversion parity (2026-07-07)
+
+Served via `npm run serve` (ES modules need a static server, not file://). Confirm the
+Canvas harness reproduces the Phaser build 1:1:
+- [ ] Boots straight to Landing with a clean console.
+- [ ] Reticle tracks the mouse exactly; dwell ring fills; click and dwell both activate.
+- [ ] Full flow works: Landing → Level Select (nodes pulse) → FTUE → each hunt level → Result.
+- [ ] Hunt: cells drift + bounce inside the circle, lock-on focus-slow, +N popups rise, combo badge appears only after the first kill, healthy-hit cue + combo reset, cracked 2-HP cells, kill burst + camera shake.
+- [ ] Circular chrome/mask + warm background render; nothing clipped outside the safe circle.
+- [ ] Text: multi-line resolution text centred; "Begin"/rating/combo chip backgrounds render; all ≥18px.
+- [ ] Switching a browser tab away and back does NOT auto-complete an in-progress dwell (delta clamp).
+- [ ] Result score line shows; rating buttons work; replay returns to Level Select.
