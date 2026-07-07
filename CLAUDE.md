@@ -130,14 +130,18 @@ docs/                    # specs, plans, playtest checklist (Date + Content Type
   and the controller commits.
 - Repo is on branch `feature/vertical-slice`; there is no `main` and no remote yet.
 
-## Current status (2026-07-04)
+## Current status (2026-07-07)
 
-Playable vertical slice + full navigable structure (Landing, circular Level Select, FTUE, 3
-levels of rising complexity, progress persistence). 33 unit tests pass; build clean. Pacing
-centralized + slowed for patient comfort (`pacing.js`); patient text floored at 18px; check-in
-placeholder guarded against false deltas. **All scene visuals + felt pace are browser/device-
-verification-pending** — the human needs to playtest and tune framing, pacing, difficulty, look,
-and legibility on the actual circular display (see `docs/playtest-checklist.md`).
+Playable vertical slice + full navigable structure. Levels 1–3 are now moving-cell
+"hunt" levels (destroy drifting cancer cells, avoid healthy blue cells; difficulty =
+drift speed, easing only) with an arcade HUD: transient per-level score, mission
+counter, patient combo (no time decay; resets only on a healthy-cell hit), floating
+popups. FTUE unchanged. New systems: `ScoreSystem`, `HuntTracker`, `motion.js`
+(all pure + unit-tested), `HudSystem`, `sprites.js` (PNG-swappable procedural art).
+Chemo-ally beat is currently unused by any level (deliberate scope cut — see
+`docs/superpowers/specs/2026-07-07-arcade-hud-hunt-levels-design.md`); the beat
+type still renders, so it can return. **All scene visuals + felt pace are
+browser/device-verification-pending** — see `docs/playtest-checklist.md`.
 
 ## Out of scope so far
 
