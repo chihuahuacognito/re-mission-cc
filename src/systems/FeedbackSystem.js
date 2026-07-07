@@ -17,6 +17,19 @@ export class FeedbackSystem {
     });
   }
 
+  // Destroy feedback: the ripple ring plus 8 particle dots flying outward.
+  killBurst(x, y, color = 0xff5c7a) {
+    this.burst(x, y, color);
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2;
+      const dot = this.scene.add.circle(x, y, 4, color, 0.9).setDepth(900);
+      this.scene.tweens.add({
+        targets: dot, x: x + Math.cos(a) * 64, y: y + Math.sin(a) * 64,
+        alpha: 0, duration: 450, ease: 'Sine.out', onComplete: () => dot.destroy(),
+      });
+    }
+  }
+
   shake(ms = 120, intensity = 0.004) {
     this.scene.cameras.main.shake(ms, intensity);
   }
