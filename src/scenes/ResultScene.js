@@ -15,6 +15,7 @@ export class ResultScene extends Phaser.Scene {
   init(data) {
     this._text = (data && data.text) || 'You restored this. Well done.';
     this._levelId = data && data.levelId;
+    this._score = (data && typeof data.score === 'number') ? data.score : null;
   }
 
   create() {
@@ -34,6 +35,12 @@ export class ResultScene extends Phaser.Scene {
     this.add.text(360, 150, this._text, {
       fontFamily: 'sans-serif', fontSize: '26px', color: '#eafff5', align: 'center',
     }).setOrigin(0.5).setDepth(10);
+
+    if (this._score !== null) {
+      this.add.text(360, 215, `Score  ${this._score}`, {
+        fontFamily: 'sans-serif', fontSize: '22px', color: '#ffd75e', fontStyle: 'bold',
+      }).setOrigin(0.5).setDepth(10);
+    }
 
     this.add.text(360, 410, 'How in control do you feel right now?', {
       fontFamily: 'sans-serif', fontSize: '18px', color: '#cfefff',
