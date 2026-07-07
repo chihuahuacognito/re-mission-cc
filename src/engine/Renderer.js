@@ -54,6 +54,11 @@ export class Renderer {
   }
 
   _text(ctx, o) {
+    if (o.scaleX !== 1 || o.scaleY !== 1) {
+      ctx.translate(o.x, o.y);
+      ctx.scale(o.scaleX, o.scaleY);
+      ctx.translate(-o.x, -o.y);
+    }
     const s = o.style || {};
     const size = parseInt(s.fontSize || '16px', 10);
     const family = s.fontFamily || 'sans-serif';
