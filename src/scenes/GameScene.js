@@ -9,10 +9,10 @@ import { resolveInteraction } from '../systems/resolveInteraction.js';
 import { selectTarget } from '../systems/targeting.js';
 import { getLevel } from '../levels/index.js';
 import { applyCircularChrome } from '../systems/CircularDisplay.js';
-import { DWELL_MS, BEAT_SETTLE_MS } from '../systems/pacing.js';
+import { PLAY_DWELL_MS, BEAT_SETTLE_MS } from '../systems/pacing.js';
 import { ScoreSystem } from '../systems/ScoreSystem.js';
 import { HuntTracker } from '../systems/HuntTracker.js';
-import { stepMover, spawnPosition, SPAWN_INTERVAL_MS } from '../systems/motion.js';
+import { stepMover, spawnPosition } from '../systems/motion.js';
 import { SPRITES } from '../systems/sprites.js';
 import { HudSystem } from '../systems/HudSystem.js';
 
@@ -30,7 +30,7 @@ export class GameScene extends Phaser.Scene {
     this.input.setDefaultCursor('none');
     applyCircularChrome(this);
     this.controller = new InputController(new MousePointerAdapter(this.input));
-    this.dwell = new DwellTracker({ dwellMs: DWELL_MS });
+    this.dwell = new DwellTracker({ dwellMs: PLAY_DWELL_MS });
     this.reticle = new Reticle(this);
     this.fx = new FeedbackSystem(this);
     this.flow = new GameFlow(this.levelBeats);
@@ -153,7 +153,6 @@ export class GameScene extends Phaser.Scene {
     // (e.g. 12 cells) reads immediately; the rest refill in as cells clear.
     const initial = Math.min(config.maxConcurrent, config.missionTotal);
     for (let i = 0; i < initial; i++) this._spawnCancer();
-    this._spawnAccum = 0;
     this._lastKillAt = this.time.now;
   }
 
@@ -229,16 +228,11 @@ export class GameScene extends Phaser.Scene {
     const dwellState = this.dwell.update(deltaMs, lockedCancer ? lockedCancer.id : null);
     this.reticle.update(p, dwellState.progress);
 
-    // Keep the field populated toward maxConcurrent. On each gentle interval
-    // tick — or immediately if the field has emptied — top up to the cap so a
-    // player who clears cells always has the next target and the mission's
-    // scale stays visible. (One shared timer that only ever replaced a single
-    // cell per tick left the screen near-empty and read as "only 3 cells.")
-    this._spawnAccum += deltaMs;
-    if (this._spawnAccum >= SPAWN_INTERVAL_MS || this.cells.length === 0) {
-      this._spawnAccum = 0;
-      while (this.tracker.canSpawn(this.cells.length)) this._spawnCancer();
-    }
+    // Keep the field topped up to maxConcurrent EVERY frame: the instant a cell
+    // dies its replacement fades in (the 600ms alpha tween softens the pop-in),
+    // so a cleared field can never read as "no respawns". Spawning stops only
+    // once the full mission total has been spawned (tracker.canSpawn caps it).
+    while (this.tracker.canSpawn(this.cells.length)) this._spawnCancer();
 
     const clicked = this.controller.justPressed();
     if ((dwellState.completed || clicked) && lockedCancer) {

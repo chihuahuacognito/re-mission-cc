@@ -45,6 +45,32 @@ describe('SceneManager', () => {
     expect(order).toEqual([['init', 7], ['create']]);
   });
 
+  it('keeps objects added AFTER a destroy+compact in the rendered list (regression: respawned cells were invisible)', () => {
+    class A extends Scene {
+      constructor() { super('A'); }
+      create() {
+        this.a = this.add.image(0, 0, 'k');
+        this.add.image(0, 0, 'k');
+      }
+    }
+    const { mgr } = makeManager([new A()]);
+    mgr.start('A'); mgr.step();
+    const scene = mgr.active;
+    expect(mgr.displayList.length).toBe(2);
+
+    // A cell dies, then the frame's compact() runs.
+    scene.a.destroy();
+    mgr.compact();
+    expect(mgr.displayList.length).toBe(1);
+
+    // A NEW object created after compact (e.g. a respawned cell) MUST land in
+    // the list the renderer reads. Before the fix, compact() replaced the array
+    // and the add-factory kept pushing into the orphaned one -> invisible.
+    const fresh = scene.add.image(0, 0, 'k');
+    expect(mgr.displayList).toContain(fresh);
+    expect(mgr.displayList.length).toBe(2);
+  });
+
   it('teardown clears display list + tweens + timers but keeps textures', () => {
     class A extends Scene {
       constructor() { super('A'); }

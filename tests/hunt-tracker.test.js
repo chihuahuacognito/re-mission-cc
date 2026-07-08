@@ -1,5 +1,58 @@
 import { describe, it, expect } from 'vitest';
 import { HuntTracker } from '../src/systems/HuntTracker.js';
+import { getLevel } from '../src/levels/index.js';
+
+// Drives the same spawn/kill bookkeeping GameScene._updateHunt runs: fill the
+// field to maxConcurrent up front, then every frame top up toward the cap while
+// the player clears cells. Guards the reported bug — "goal says 12 but only 4
+// ever appear, nothing respawns after the first 4 are cleared."
+function simulateHunt(config, { killsPerSecond = 4, fps = 60 } = {}) {
+  const tracker = new HuntTracker(config);
+  let cells = 0;
+  const initial = Math.min(config.maxConcurrent, config.missionTotal);
+  for (let i = 0; i < initial; i++) { tracker.nextHp(); cells += 1; }
+
+  const framesPerKill = Math.max(1, Math.round(fps / killsPerSecond));
+  let peakConcurrent = cells;
+  let clearedFieldThenRefilled = false;
+  let frame = 0;
+  while (!tracker.isComplete() && frame < 100000) {
+    frame += 1;
+    // every-frame refill (verbatim intent of _updateHunt)
+    while (tracker.canSpawn(cells)) { tracker.nextHp(); cells += 1; }
+    peakConcurrent = Math.max(peakConcurrent, cells);
+    if (frame % framesPerKill === 0 && cells > 0) {
+      cells -= 1;
+      tracker.recordKill();
+      if (cells === 0 && tracker.canSpawn(0)) clearedFieldThenRefilled = true;
+    }
+  }
+  return { tracker, peakConcurrent, clearedFieldThenRefilled, cells };
+}
+
+describe('hunt refill — clearing the field respawns up to missionTotal', () => {
+  for (const id of ['l1', 'l2', 'l3']) {
+    const config = getLevel(id).beats.find((b) => b.type === 'hunt').config;
+    it(`${id}: spawns all ${config.missionTotal} cells despite a cap of ${config.maxConcurrent}`, () => {
+      const { tracker } = simulateHunt(config);
+      expect(tracker.spawned()).toBe(config.missionTotal);
+      expect(tracker.killed()).toBe(config.missionTotal);
+      expect(tracker.isComplete()).toBe(true);
+    });
+
+    it(`${id}: respawns beyond the initial ${config.maxConcurrent} — not "only a few appear"`, () => {
+      const { tracker } = simulateHunt(config);
+      // If respawn were broken, spawned would stall at maxConcurrent.
+      expect(tracker.spawned()).toBeGreaterThan(config.maxConcurrent);
+    });
+
+    it(`${id}: never exceeds the concurrent cap and never overspawns`, () => {
+      const { peakConcurrent, tracker } = simulateHunt(config);
+      expect(peakConcurrent).toBeLessThanOrEqual(config.maxConcurrent);
+      expect(tracker.spawned()).toBeLessThanOrEqual(config.missionTotal);
+    });
+  }
+});
 
 describe('HuntTracker', () => {
   it('spawns until the field cap, then waits for room', () => {

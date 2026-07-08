@@ -31,8 +31,15 @@ export class SceneManager {
   }
 
   compact() {
-    if (this.displayList.some((o) => o.destroyed)) {
-      this.displayList = this.displayList.filter((o) => !o.destroyed);
+    // Remove destroyed objects IN PLACE. Never reassign this.displayList: the
+    // scene's add-factory (see _inject) captured a reference to this exact
+    // array, so replacing it would orphan every object added after the first
+    // destroy — they'd push into the old array the renderer no longer reads,
+    // rendering them invisible while still logically present (lockable). That
+    // was the bug where respawned hunt cells never appeared once the first
+    // original cell was cleared.
+    for (let i = this.displayList.length - 1; i >= 0; i--) {
+      if (this.displayList[i].destroyed) this.displayList.splice(i, 1);
     }
   }
 
