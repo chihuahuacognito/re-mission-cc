@@ -73,53 +73,73 @@ Nothing else in scenes or systems changes. Dwell, reticle, aim-assist, no-fail �
 ## The testable core (pure functions — unit-tested, per project convention)
 
 These hold all the logic and none of the browser/camera dependencies, so they are unit-tested with
-Vitest like the rest of the game's pure logic. They live in `src/input/gestureMath.js`.
+Vitest like the rest of the game's pure logic. They live in `src/input/gestureMath.js`. (Importing
+`DISPLAY` from `CircularDisplay.js` is Node-safe — `DISPLAY` is a plain const with no engine import.)
+
+`DISPLAY = { cx: 360, cy: 360, radius: 352, safe: 330 }`. The reticle clamps to **`DISPLAY.safe`
+(330)** — the play area inside the rim — NOT `DISPLAY.radius` (352, the rim edge).
 
 ### `mapHandToGame(normX, normY)` -> `{ x, y }`
 
-- Input: hand landmark in normalized video coords (0..1), origin top-left.
+- Input: **index fingertip (landmark 8)** in normalized video coords (0..1), origin top-left.
 - **Mirror X** (`1 - normX`): the webcam is a selfie view, so raw X is left-right reversed relative
-  to what the user sees.
+  to what the user sees. (Pinch math uses raw, unmirrored coords — distance is mirror-invariant.)
 - Scale to the 720x720 canvas.
-- **Clamp into the safe circle** (center 360,360, radius ~330 from `CircularDisplay.DISPLAY`): the
-  reticle can never leave the visible play area even if the hand does.
+- **Clamp into `DISPLAY.safe`** (center 360,360, radius 330): while a hand is tracked, the reticle
+  can never leave the play area even if the hand drifts off-frame.
 
-### `isPinching(landmarks)` -> `boolean`
+### No-tracking sentinel (safety-critical)
 
-- Distance between thumb tip (landmark 4) and index tip (landmark 8), **normalized by a hand-size
-  reference** (e.g. wrist-to-index-MCP distance) so it works at any distance from the camera.
-- Returns true when the normalized distance is below a threshold constant.
+When **no hand is currently tracked** — startup, camera denied, or hand lost mid-play — the adapter
+does NOT return the clamped last position. It returns an **off-screen sentinel** (e.g. `{-1000,-1000}`)
+and `isDown() === false`. Consequence: no dwell target is ever under the reticle, so a dropped hand
+can never auto-complete a dwell and fire. `gestureMath.js` exports `OFFSCREEN` and the adapter's
+position cache **initializes to it** (so a camera-denied load never sits on a target). The reticle
+simply isn't drawn over anything, which pairs with the "show your hand" status.
+
+### `isPinching(worldLandmarks)` -> `boolean`
+
+- Uses **`worldLandmarks`** (metric, in meters, aspect-ratio-independent) — NOT the 2D normalized
+  landmarks, whose x/y are scaled to width/height separately and skew distance on non-square feeds.
+- 3D distance between thumb tip (4) and index tip (8), normalized by a hand-size reference
+  (wrist 0 -> index MCP 5) so it's invariant to hand distance from the camera.
+- Returns true when the normalized distance is below `PINCH_THRESHOLD`.
 
 ### `PinchDebouncer` (small stateful class, pure)
 
 - `update(rawPinching) -> boolean`: only flips its output after the raw pinch state holds for
   `PINCH_HOLD_FRAMES` (~3) consecutive frames. Prevents a single misread frame from firing.
-
-### The cursor landmark
-
-The **index fingertip (landmark 8)** drives the cursor position.
+  Initial output is `false`.
 
 ### Constants
 
-`gestureMath.js` exports tunables in one place: `PINCH_THRESHOLD`, `PINCH_HOLD_FRAMES`, cursor
-landmark index. (Mirroring correctness, clamp, and debounce are included as **correctness, not
-polish** — without them the feature is backwards, escapes the circle, or misfires every frame.)
+`gestureMath.js` exports tunables in one place: `PINCH_THRESHOLD`, `PINCH_HOLD_FRAMES`, the cursor
+landmark index (8), and `OFFSCREEN`. (Mirroring, safe-circle clamp, the no-tracking sentinel, and
+debounce are **correctness, not polish** — without them the feature is backwards, escapes the
+circle, auto-fires on a dropped hand, or misfires every frame.)
 
 ## MediaPipe plumbing (browser-only; manual verification gate)
 
-- Load `@mediapipe/tasks-vision` (`GestureRecognizer`, `FilesetResolver`) from the jsDelivr CDN via
-  an ESM `import` inside `GestureAdapter.js`. Consistent with the buildless, static-served project;
-  no bundler/build step added.
+- Load **`HandLandmarker`** + `FilesetResolver` from `@mediapipe/tasks-vision` via a **version-pinned**
+  ESM import of the explicit bundle:
+  `import { HandLandmarker, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.x/vision_bundle.mjs"`
+  (pin the same version for the `forVisionTasks` wasm path). `HandLandmarker` (not `GestureRecognizer`)
+  because we derive pinch from landmarks and never use the built-in gesture categories — the classifier
+  would be a larger model and wasted per-frame cost. Consistent with the buildless, static-served
+  project; no bundler/build step added.
 - The `GestureAdapter` creates its **own hidden `<video>` element** (appended to the document, kept
-  offscreen) and receives the webcam stream via `navigator.mediaDevices.getUserMedia`. No change to
-  `index.html`. getUserMedia requires https or `http://localhost` — already how the game is served
-  (double-clicking `index.html` from `file://` will NOT get camera access; must use the localhost
-  server).
-- A detection loop (its own `requestAnimationFrame`, **throttled** to run on a fraction of frames
-  since the game is light) calls `recognizeForVideo`, passes the first hand's landmarks through
-  `mapHandToGame` / `isPinching` / `PinchDebouncer`, and writes the cached `{ x, y, down }`.
-- `numHands: 1`. If no hand is detected in a frame, position holds at its last value and `down`
-  is false.
+  offscreen) and requests the webcam with `getUserMedia({ video: { width: 640, height: 480,
+  facingMode: 'user' } })`. No change to `index.html`. getUserMedia requires https or
+  `http://localhost` — already how the game is served (a `file://` open will NOT get camera access;
+  must use the localhost server).
+- A detection loop (its own `requestAnimationFrame`, **throttled** to a fraction of frames since the
+  game is light) calls `handLandmarker.detectForVideo(video, timestampMs)` where `timestampMs` is
+  **`performance.now()`** — a strictly-monotonic source. (Deriving the timestamp from
+  `video.currentTime` would pass a duplicate on a throttled frame and `detectForVideo` throws.) It
+  gates the first call on `video.readyState >= 2` and non-zero `videoWidth/videoHeight`.
+- One hand. On a detected hand it feeds `result.landmarks[0]` (index 8) through `mapHandToGame` and
+  `result.worldLandmarks[0]` through `isPinching`/`PinchDebouncer`, then writes the cached
+  `{ x, y, down }`. On **no hand** it writes the off-screen sentinel + `down:false` (see safety note).
 
 ## Status indicator (approved)
 
@@ -131,10 +151,13 @@ camera/permission failure is visible instead of looking like a dead game:
 - "Show your hand" when the camera is live but no hand is detected.
 - Hidden once a hand is being tracked.
 
-It obeys the patient-text 18px floor and sits inside the safe circle. Implemented as a **DOM
-overlay element** owned by the `GestureAdapter` (like the hidden video), positioned over the
-canvas via CSS — not a canvas/scene object. Because the adapter outlives scenes, the status works
-regardless of which scene is active and needs no per-scene wiring.
+Implemented as a **DOM overlay element** owned by the `GestureAdapter` (like the hidden video). It
+is **CSS-centered over the canvas** (centered on the `#game` container) — deliberately NOT placed at
+a game coordinate, so it needs no game-space transform and can't drift as the canvas scales. Being
+centered, it is inherently well inside the safe circle. Font size scales with the viewport
+(`vmin`-based, floored at 18px) so it stays legible at the display's real rendered size rather than
+a fixed pixel size that would shrink relative to the up-scaled canvas. Because the adapter outlives
+scenes, the status works regardless of the active scene and needs no per-scene wiring.
 
 ## Files
 
@@ -152,9 +175,11 @@ regardless of which scene is active and needs no per-scene wiring.
 
 ## Testing & verification
 
-- **Unit (Vitest):** `mapHandToGame` (mirror, scale, clamp cases), `isPinching` (below/above
-  threshold, distance-invariance), `PinchDebouncer` (hold, flicker rejection). Parse gate + full
-  suite stay green.
+- **Unit (Vitest):** `mapHandToGame` (mirror at X=0/0.5/1, scale, clamp of an off-frame hand into
+  `DISPLAY.safe`, out-of-[0,1] inputs); `isPinching` (below/above threshold, invariance to hand
+  distance and orientation via worldLandmarks); `PinchDebouncer` (initial=false, holds N frames,
+  rejects a single-frame flicker); the **no-tracking sentinel** (returns `OFFSCREEN`, and `OFFSCREEN`
+  is outside `DISPLAY.safe` so no target/aim-assist can match it). Parse gate + full suite stay green.
 - **Manual (browser gate — cannot be automated):** serve on localhost, open `?input=gesture`, grant
   camera, verify the reticle tracks the hand, pinch fires, dwell still works, status line behaves,
   and the reticle never leaves the circle. Mouse mode (default) is unaffected.
