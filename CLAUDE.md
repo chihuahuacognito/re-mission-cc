@@ -47,8 +47,11 @@ in the 2026-07-07 conversion — see `docs/superpowers/specs/2026-07-07-html-can
 
 **Input (the load-bearing abstraction).** All input flows through
 `src/input/InputController.js`. Scene/game code NEVER reads `this.input.activePointer`
-directly — only `src/input/MousePointerAdapter.js` does. A future `GestureAdapter` swaps in with
-no other changes. `src/input/DwellTracker.js` provides hover-to-fill activation.
+directly — only `src/input/MousePointerAdapter.js` does. Scenes pick their source via
+`src/input/pointerSource.js` (`getPointerSource(this)`): mouse by default, or the camera-backed
+`src/input/GestureAdapter.js` singleton when the URL has `?input=gesture` (hand aims, pinch/dwell
+activates). Both expose the same two-method source interface (`getPosition`/`isDown`), so nothing
+else changes. `src/input/DwellTracker.js` provides hover-to-fill activation.
 `InputController.justPressed()` ignores a button held on the controller's first frame (prevents
 cross-scene click-bleed when `scene.start` lands with the button still down).
 
@@ -149,5 +152,9 @@ source moved). Buildless — run `npm run serve` and open the URL; `npm test` co
 
 ## Out of scope so far
 
-Real gesture integration, moving enemies, audio, backend/accounts, real PROMs/consent/IRB,
-multi-phase boss AI (approximated by HP), pre-session check-in (currently a `pre:3` placeholder).
+Moving enemies, audio, backend/accounts, real PROMs/consent/IRB, multi-phase boss AI
+(approximated by HP), pre-session check-in (currently a `pre:3` placeholder). Gesture control
+exists as a **minimal PoC** (`?input=gesture`, MediaPipe HandLandmarker via CDN) —
+threading/smoothing/calibration/offline model are deliberately the tech team's job (see the
+handoff notes in `docs/superpowers/specs/2026-07-08-mediapipe-gesture-control-design.md`).
+Its pure core is unit-tested; the camera path is a browser-only manual gate.

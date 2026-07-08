@@ -1,6 +1,6 @@
 import Phaser from '../engine/phaser-shim.js';
 import { InputController } from '../input/InputController.js';
-import { MousePointerAdapter } from '../input/MousePointerAdapter.js';
+import { getPointerSource } from '../input/pointerSource.js';
 import { DwellTracker } from '../input/DwellTracker.js';
 import { Reticle } from '../systems/Reticle.js';
 import { FeedbackSystem } from '../systems/FeedbackSystem.js';
@@ -16,7 +16,7 @@ export class FTUEScene extends Phaser.Scene {
   create() {
     this.input.setDefaultCursor('none');
     applyCircularChrome(this);
-    this.controller = new InputController(new MousePointerAdapter(this.input));
+    this.controller = new InputController(getPointerSource(this));
     // Unhurried hover-to-lock — teaches the same calm pace the levels use.
     this.dwell = new DwellTracker({ dwellMs: PLAY_DWELL_MS });
     this.reticle = new Reticle(this);

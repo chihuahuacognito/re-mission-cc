@@ -1,6 +1,6 @@
 import Phaser from '../engine/phaser-shim.js';
 import { InputController } from '../input/InputController.js';
-import { MousePointerAdapter } from '../input/MousePointerAdapter.js';
+import { getPointerSource } from '../input/pointerSource.js';
 import { DwellTracker } from '../input/DwellTracker.js';
 import { Reticle } from '../systems/Reticle.js';
 import { applyCircularChrome } from '../systems/CircularDisplay.js';
@@ -13,7 +13,7 @@ export class LandingScene extends Phaser.Scene {
     this.input.setDefaultCursor('none');
     applyCircularChrome(this);
 
-    this.controller = new InputController(new MousePointerAdapter(this.input));
+    this.controller = new InputController(getPointerSource(this));
     this.dwell = new DwellTracker({ dwellMs: DWELL_MS });
     this.reticle = new Reticle(this);
 
