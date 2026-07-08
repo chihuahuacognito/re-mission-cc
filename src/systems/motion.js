@@ -4,7 +4,7 @@ import { DISPLAY } from './CircularDisplay.js';
 // feel); per-level SPEEDS live in the level data files.
 export const FOCUS_SLOW = 0.25;           // a locked cell drifts at 25% speed
 export const WANDER_TURN_RAD_PER_S = 0.9; // max random heading drift per second
-export const SPAWN_INTERVAL_MS = 2600;    // gentle trickle between cancer spawns
+export const SPAWN_INTERVAL_MS = 1500;    // how often the field tops up toward maxConcurrent
 
 const SAFE = { cx: DISPLAY.cx, cy: DISPLAY.cy, radius: DISPLAY.safe };
 

@@ -149,8 +149,9 @@ export class GameScene extends Phaser.Scene {
     }
 
     this._makeAmbience();
-    // A few cells up front so the hunt starts alive; the rest trickle in.
-    const initial = Math.min(3, config.maxConcurrent, config.missionTotal);
+    // Fill the field to the concurrency cap up front so the mission's scale
+    // (e.g. 12 cells) reads immediately; the rest refill in as cells clear.
+    const initial = Math.min(config.maxConcurrent, config.missionTotal);
     for (let i = 0; i < initial; i++) this._spawnCancer();
     this._spawnAccum = 0;
     this._lastKillAt = this.time.now;
@@ -228,11 +229,15 @@ export class GameScene extends Phaser.Scene {
     const dwellState = this.dwell.update(deltaMs, lockedCancer ? lockedCancer.id : null);
     this.reticle.update(p, dwellState.progress);
 
-    // Gentle trickle spawn.
+    // Keep the field populated toward maxConcurrent. On each gentle interval
+    // tick — or immediately if the field has emptied — top up to the cap so a
+    // player who clears cells always has the next target and the mission's
+    // scale stays visible. (One shared timer that only ever replaced a single
+    // cell per tick left the screen near-empty and read as "only 3 cells.")
     this._spawnAccum += deltaMs;
-    if (this._spawnAccum >= SPAWN_INTERVAL_MS && this.tracker.canSpawn(this.cells.length)) {
+    if (this._spawnAccum >= SPAWN_INTERVAL_MS || this.cells.length === 0) {
       this._spawnAccum = 0;
-      this._spawnCancer();
+      while (this.tracker.canSpawn(this.cells.length)) this._spawnCancer();
     }
 
     const clicked = this.controller.justPressed();
